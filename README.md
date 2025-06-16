@@ -19,8 +19,8 @@ Structure data to facilitate future integration with machine learning models, da
 CREATE DATABASE IBM_pay_db;
 USE IBM_pay_db;
 ```
-Table Creation
-Table:Customers
+## Table Creation
+### Table:Customers
 ```sql
 CREATE TABLE Customers(
         customer_id INT PRIMARY KEY,
@@ -35,7 +35,7 @@ CREATE TABLE Customers(
 
 SELECT * FROM Customers;
 ```
-Table:Accounts
+### Table:Accounts
 
 ```sql
 CREATE TABLE Accounts(
@@ -49,7 +49,7 @@ CREATE TABLE Accounts(
 
 SELECT * FROM Accounts;
 ```
-Table
+### Table:Transactions
 ```sql
 CREATE TABLE Transactions(
     transaction_id BIGINT PRIMARY KEY,
@@ -70,7 +70,7 @@ CREATE TABLE Transactions(
 
 SELECT * FROM Transactions;
 ```
-##Key Queries
+## Key Queries
 #### 1. How many transactions were conducted online versus in-person?
 ```sql
 SELECT  is_online,COUNT(*) AS Total_Transactions FROM Transactions
