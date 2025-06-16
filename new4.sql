@@ -160,8 +160,8 @@ SELECT  is_online,COUNT(*) AS Total_Transactions FROM Transactions
 GROUP BY  is_online;
 
 -- 2. What is the average transaction amount for each merchant category?
-SELECT merchant_name, ROUND(AVG(amount),2) AS Average_Amount FROM Transactions
-GROUP BY merchant_name;
+SELECT merchant_category, ROUND(AVG(amount),2) AS Average_Amount FROM Transactions
+GROUP BY merchant_category;
 
 -- 3. Which accounts have more than 5 transactions in a single day?
 SELECT account_id, DATE(transaction_datetime) AS Transaction_date, COUNT(*) AS Total_transactions FROM Transactions
@@ -178,13 +178,15 @@ WHERE is_foreign=TRUE;
 
 -- 6. Detect potential money laundering: transactions just below $10,000 (common reporting threshold).
 SELECT * FROM Transactions
-WHERE amount<10000.00 AND is_fraud=TRUE;
+WHERE amount>=9500.00 AND amount<10000.00 ;
 
  -- 7. Which customers have both a high-value purchase (>$500) and a small test transaction (<$5) within 24 hours?
- SELECT c.customer_id, CONCAT(c.first_name,' ',c.last_name) AS Customer_Name FROM Customers AS c
+ SELECT c.customer_id, CONCAT(c.first_name,' ',c.last_name) AS Customer_Name 
+ FROM Customers AS c
  JOIN Accounts AS a ON c.customer_id=a.customer_id
- JOIN Transactions AS t ON t.account_id=a.account_id
- WHERE t.amount>500.00 AND t.amount<5.00;
+ JOIN Transactions AS t1 ON t1.account_id=a.account_id AND t1.amount>500
+ JOIN Transactions AS t2 ON t2.account_id=a.account_id AND t2.amount<5
+ WHERE TIMESTAMPDIFF(HOUR,t2.transaction_datetime,t1.transaction_datetime)<=24;
  
 -- 8. Calculate the spending velocity (total amount spent per hour) for each active customer.
 SELECT
@@ -206,7 +208,7 @@ GROUP BY c.customer_id;
     SUM(amount) AS total_amount
   FROM transactions t
   JOIN Accounts a ON t.account_id = a.account_id
-  GROUP BY a.customer_id, DATE_FORMAT(t.transaction_datetime, '%Y-%m')
+  GROUP BY a.customer_id, transaction_month
 ),
 ThisMonth AS (
   SELECT * FROM MonthlyStats
@@ -233,30 +235,30 @@ WHERE tm.transaction_count > 2 * lm.avg_transaction_count OR tm.total_amount > 2
  HAVING  Login_Devices>3;
  
 -- 11. Identify dormant accounts (no transactions for 90+ days) that suddenly became active.
-WITH Last90Txns AS (
-  SELECT account_id, MAX(transaction_datetime) AS last_txn
+WITH Last90Transactions AS (
+  SELECT account_id, MAX(transaction_datetime) AS last_transaction
   FROM Transactions
   GROUP BY account_id
 ),
 Dormant AS (
-  SELECT account_id FROM Last90Txns
-  WHERE last_txn < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+  SELECT account_id FROM Last90Transactions
+  WHERE last_transaction < DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
 ),
-RecentTxns AS (
+RecentTransactions AS (
   SELECT DISTINCT account_id
   FROM Transactions
   WHERE transaction_datetime >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
 )
 SELECT d.account_id
 FROM Dormant d
-JOIN RecentTxns r ON d.account_id = r.account_id;
+JOIN RecentTransactions r ON d.account_id = r.account_id;
     
 -- 12. Find accounts where the transaction frequency doubled compared to the previous month.
 WITH MonthlyCounts AS (
   SELECT 
     account_id,
     DATE_FORMAT(transaction_datetime, '%Y-%m') AS transaction_month,
-    COUNT(*) AS transaction_count
+    COUNT(*) AS total_transactions
   FROM Transactions
   GROUP BY account_id, DATE_FORMAT(transaction_datetime, '%Y-%m')
 ),
@@ -271,7 +273,7 @@ Previous AS (
 SELECT c.account_id
 FROM Current c
 JOIN Previous p ON c.account_id = p.account_id
-WHERE c.transaction_count >= 2 * p.transaction_count;
+WHERE c.total_transactions >= 2 * p.total_transactions;
 
 -- 13. Detect "pump-and-dump" patterns: small recurring deposits followed by a large withdrawal.
 SELECT DISTINCT d.account_id

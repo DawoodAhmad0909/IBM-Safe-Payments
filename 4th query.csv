@@ -1,0 +1,1 @@
+transaction_id,account_id,transaction_datetime,amount,merchant_name,merchant_category,transaction_type,is_foreign,is_online,ip_address,device_id,is_fraud,fraud_type
