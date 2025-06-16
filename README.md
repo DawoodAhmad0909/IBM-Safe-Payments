@@ -160,7 +160,8 @@ SELECT account_id,YEARWEEK(transaction_datetime) AS week,COUNT(DISTINCT device_i
  HAVING  Login_Devices>3;
 ```
 #### 11. Identify dormant accounts (no transactions for 90+ days) that suddenly became active.
-```WITH Last90Transactions AS (
+```sql
+WITH Last90Transactions AS (
   SELECT account_id, MAX(transaction_datetime) AS last_transaction
   FROM Transactions
   GROUP BY account_id
@@ -179,7 +180,8 @@ FROM Dormant d
 JOIN RecentTransactions r ON d.account_id = r.account_id;
 ```
 #### 12. Find accounts where the transaction frequency doubled compared to the previous month.
-```WITH MonthlyCounts AS (
+```sql
+WITH MonthlyCounts AS (
   SELECT 
     account_id,
     DATE_FORMAT(transaction_datetime, '%Y-%m') AS transaction_month,
