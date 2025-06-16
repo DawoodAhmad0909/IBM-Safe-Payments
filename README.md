@@ -1,12 +1,15 @@
 # IBM-Safe-Payments
-Overview
+## Overview
 Database:IBM_pay_db
-Objectives
-Database Creation
+## Objectives
+## Database Creation
+```sql
 CREATE DATABASE IBM_pay_db;
 USE IBM_pay_db;
+```
 Table Creation
 Table:Customers
+```sql
 CREATE TABLE Customers(
         customer_id INT PRIMARY KEY,
         first_name VARCHAR(20) NOT NULL,
@@ -19,8 +22,10 @@ CREATE TABLE Customers(
 );
 
 SELECT * FROM Customers;
+```
 Table:Accounts
 
+```sql
 CREATE TABLE Accounts(
         account_id INT PRIMARY KEY,
     customer_id INT,
@@ -31,9 +36,11 @@ CREATE TABLE Accounts(
 );
 
 SELECT * FROM Accounts;
-
-, 
-        ( BIGINT PRIMARY KEY,
+```
+Table
+```sql
+CREATE TABLE Transactions(
+    transaction_id BIGINT PRIMARY KEY,
     account_id INT,
     transaction_datetime DATETIME,
     amount DECIMAL(10,2),
@@ -53,28 +60,34 @@ SELECT * FROM Transactions;
 ```
 ##Key Queries
 #### 1. How many transactions were conducted online versus in-person?
-```SELECT  is_online,COUNT(*) AS Total_Transactions FROM Transactions
+```sql
+SELECT  is_online,COUNT(*) AS Total_Transactions FROM Transactions
 GROUP BY  is_online;
 ```
 #### 2. What is the average transaction amount for each merchant category?
-```SELECT merchant_category, ROUND(AVG(amount),2) AS Average_Amount FROM Transactions
+```sql
+SELECT merchant_category, ROUND(AVG(amount),2) AS Average_Amount FROM Transactions
 GROUP BY merchant_category;
 ```
 #### 3. Which accounts have more than 5 transactions in a single day?
-```SELECT account_id, DATE(transaction_datetime) AS Transaction_date, COUNT(*) AS Total_transactions FROM Transactions
+```sql
+SELECT account_id, DATE(transaction_datetime) AS Transaction_date, COUNT(*) AS Total_transactions FROM Transactions
  GROUP BY account_id, Transaction_date
  HAVING COUNT(*) >5;
 ```
 #### 4. Identify transactions with amounts exceeding $1000 that occurred between midnight and 5 AM.
-```SELECT * FROM Transactions
+```sql
+SELECT * FROM Transactions
 WHERE amount>1000.00 AND HOUR(transaction_datetime) BETWEEN 0 AND 5;
 ```
 #### 6. Detect potential money laundering: transactions just below $10,000 (common reporting threshold).
-```SELECT * FROM Transactions
+```sql
+SELECT * FROM Transactions
 WHERE amount>=9500.00 AND amount<10000.00 ;
 ```
 #### 7. Which customers have both a high-value purchase (>$500) and a small test transaction (<$5) within 24 hours?
-``` SELECT c.customer_id, CONCAT(c.first_name,' ',c.last_name) AS Customer_Name 
+```sql
+ SELECT c.customer_id, CONCAT(c.first_name,' ',c.last_name) AS Customer_Name 
  FROM Customers AS c
  JOIN Accounts AS a ON c.customer_id=a.customer_id
  JOIN Transactions AS t1 ON t1.account_id=a.account_id AND t1.amount>500
@@ -82,7 +95,8 @@ WHERE amount>=9500.00 AND amount<10000.00 ;
  WHERE TIMESTAMPDIFF(HOUR,t2.transaction_datetime,t1.transaction_datetime)<=24;
 ```
 #### 8. Calculate the spending velocity (total amount spent per hour) for each active customer.
-```SELECT
+```sql
+SELECT
         c.customer_id AS Customer_id,
         CONCAT(c.first_name,' ',c.last_name) AS Customer_Name, 
     SUM(t.amount)/(TIMESTAMPDIFF(HOUR,MIN(t.transaction_datetime),(MAX(t.transaction_datetime)))) AS Spending_velocity
@@ -93,7 +107,8 @@ WHERE c.is_active=TRUE
 GROUP BY c.customer_id;
 ```
 #### 9. Find customers whose transaction patterns significantly changed this month (compared to their 3-month average).
-``| WITH MonthlyStats AS (
+```sql
+ WITH MonthlyStats AS (
   SELECT 
     a.customer_id,
     DATE_FORMAT(t.transaction_datetime, '%Y-%m') AS transaction_month,
@@ -122,7 +137,8 @@ JOIN Last3Months lm ON tm.customer_id = lm.customer_id
 WHERE tm.transaction_count > 2 * lm.avg_transaction_count OR tm.total_amount > 2 * lm.avg_total_amount;
 ```
 #### 10. List accounts with login attempts from more than 3 different devices in a week.
-``` SELECT account_id,YEARWEEK(transaction_datetime) AS week,COUNT(DISTINCT device_id) AS Login_Devices
+```sql
+SELECT account_id,YEARWEEK(transaction_datetime) AS week,COUNT(DISTINCT device_id) AS Login_Devices
  FROM TransactionS
  GROUP BY account_id,YEARWEEK(transaction_datetime)
  HAVING  Login_Devices>3;
@@ -169,7 +185,8 @@ JOIN Previous p ON c.account_id = p.account_id
 WHERE c.total_transactions >= 2 * p.total_transactions;
 ```
 #### 13. Detect "pump-and-dump" patterns: small recurring deposits followed by a large withdrawal.
-```SELECT DISTINCT d.account_id
+```sql
+SELECT DISTINCT d.account_id
 FROM transactions d
 JOIN transactions w 
   ON d.account_id = w.account_id
@@ -179,7 +196,8 @@ WHERE d.transaction_type = 'deposit' AND d.amount < 100;
 
 ```
 #### 14. Find transactions where the merchant category doesn't match the account's usual spending habits.
-```WITH UsualCategories AS (
+```sql
+WITH UsualCategories AS (
   SELECT account_id, merchant_category,
          COUNT(*) AS category_count
   FROM transactions
@@ -201,7 +219,8 @@ LEFT JOIN TopCategory tc
 WHERE tc.merchant_category IS NULL;
 ```
 #### 15. Identify potential card skimming: sequential transactions at the same merchant with slightly varying amounts.
-```SELECT t1.*
+```sql
+SELECT t1.*
 FROM transactions t1
 JOIN transactions t2 
   ON t1.account_id = t2.account_id
