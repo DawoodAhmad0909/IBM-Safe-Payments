@@ -3,16 +3,20 @@
 Database:IBM_pay_db
 The IBM_pay_db database is a comprehensive financial dataset designed to simulate the structure and operations of a digital banking platform. It includes three interconnected tables: Customers, Accounts, and Transactions. Each table captures essential details relevant to real-world banking operations. The schema supports customer profiling, account management, and transaction tracking. This setup is ideal for performing advanced analytics such as customer behavior analysis, fraud detection, and financial forecasting.
 ## Objectives
-1. Design a Relational Schema:
+#### 1. Design a Relational Schema:
+
 Create normalized tables to store customer details, account information, and transaction history with appropriate data types, constraints, and relationships.
 
-2. Establish Data Relationships:
+#### 2. Establish Data Relationships:
+
 Implement foreign key constraints to maintain referential integrity between customers, accounts, and transactions.
 
-3. Populate the Database:
+#### 3. Populate the Database:
+
 Insert realistic and varied data to mimic a functioning banking system, including online, foreign, and in-person transactions.
 
-4. Prepare for Advanced Use Cases:
+#### 4. Prepare for Advanced Use Cases:
+
 Structure data to facilitate future integration with machine learning models, dashboards, or business intelligence tools.
 ## Database Creation
 ```sql
